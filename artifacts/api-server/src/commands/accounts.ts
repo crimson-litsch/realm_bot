@@ -1,0 +1,40 @@
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  EmbedBuilder,
+} from "discord.js";
+import { db } from "@workspace/db";
+import { linkedAccountsTable } from "@workspace/db/schema";
+import { eq, asc } from "drizzle-orm";
+
+export const data = new SlashCommandBuilder()
+  .setName("accounts")
+  .setDescription("List all your linked Clash of Clans accounts");
+
+export async function execute(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply({ flags: 64 });
+
+  const userId = interaction.user.id;
+  const accounts = await db
+    .select()
+    .from(linkedAccountsTable)
+    .where(eq(linkedAccountsTable.discordUserId, userId))
+    .orderBy(asc(linkedAccountsTable.position));
+
+  if (accounts.length === 0) {
+    await interaction.editReply("You have no linked accounts. Use `/link <tag>` to add one.");
+    return;
+  }
+
+  const embed = new EmbedBuilder()
+    .setColor(0x3498db)
+    .setTitle("Your Linked Accounts")
+    .setDescription(
+      accounts
+        .map((a, i) => `**${i + 1}.** \`${a.playerTag}\``)
+        .join("\n")
+    )
+    .setFooter({ text: `${accounts.length}/10 slots used` });
+
+  await interaction.editReply({ embeds: [embed] });
+}
