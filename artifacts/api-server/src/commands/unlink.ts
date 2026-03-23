@@ -1,41 +1,30 @@
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-} from "discord.js";
+import { Message, EmbedBuilder } from "discord.js";
 import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 
-export const data = new SlashCommandBuilder()
-  .setName("unlink")
-  .setDescription("Unlink a Clash of Clans account from your Discord profile")
-  .addStringOption((opt) =>
-    opt
-      .setName("tag")
-      .setDescription("The player tag to unlink (e.g. #ABC123)")
-      .setRequired(true)
-  );
+export async function handleUnlink(message: Message, args: string[]) {
+  const rawTag = args[0];
+  if (!rawTag) {
+    await message.reply("Please provide a player tag. Usage: `!unlink #ABC123`");
+    return;
+  }
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply({ flags: 64 });
-
-  const rawTag = interaction.options.getString("tag", true).trim();
-  const tag = rawTag.startsWith("#") ? rawTag : `#${rawTag}`;
-  const userId = interaction.user.id;
+  const tag = rawTag.startsWith("#") ? rawTag.toUpperCase() : `#${rawTag.toUpperCase()}`;
+  const userId = message.author.id;
 
   const deleted = await db
     .delete(linkedAccountsTable)
     .where(
       and(
         eq(linkedAccountsTable.discordUserId, userId),
-        eq(linkedAccountsTable.playerTag, tag.toUpperCase())
+        eq(linkedAccountsTable.playerTag, tag)
       )
     )
     .returning();
 
   if (deleted.length === 0) {
-    await interaction.editReply(`No linked account found with tag \`${tag}\`.`);
+    await message.reply(`No linked account found with tag \`${tag}\`.`);
     return;
   }
 
@@ -44,5 +33,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .setTitle("Account Unlinked")
     .setDescription(`Successfully unlinked \`${tag}\` from your Discord profile.`);
 
-  await interaction.editReply({ embeds: [embed] });
+  await message.reply({ embeds: [embed] });
 }

@@ -2,82 +2,73 @@ import {
   Client,
   GatewayIntentBits,
   Events,
-  REST,
-  Routes,
-  Collection,
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
+  Message,
 } from "discord.js";
 import { logger } from "./lib/logger";
-import * as linkCmd from "./commands/link";
-import * as unlinkCmd from "./commands/unlink";
-import * as statsCmd from "./commands/stats";
-import * as donationsCmd from "./commands/donations";
-import * as accountsCmd from "./commands/accounts";
+import { handleLink } from "./commands/link";
+import { handleUnlink } from "./commands/unlink";
+import { handleProfile } from "./commands/stats";
+import { handleDonations } from "./commands/donations";
+import { handleAccounts } from "./commands/accounts";
 
 const token = process.env["DISCORD_BOT_TOKEN"];
-const clientId = "1442251345242493059";
 
 if (!token) {
   throw new Error("DISCORD_BOT_TOKEN must be set.");
 }
 
-interface Command {
-  data: SlashCommandBuilder;
-  execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
-}
-
-const commands = new Collection<string, Command>();
-const commandList: Command[] = [
-  linkCmd,
-  unlinkCmd,
-  statsCmd,
-  donationsCmd,
-  accountsCmd,
-];
-
-for (const cmd of commandList) {
-  commands.set(cmd.data.name, cmd);
-}
-
-async function registerCommands() {
-  const rest = new REST().setToken(token!);
-  const body = commandList.map((c) => c.data.toJSON());
-
-  try {
-    logger.info("Registering slash commands...");
-    await rest.put(Routes.applicationCommands(clientId), { body });
-    logger.info("Slash commands registered successfully");
-  } catch (err) {
-    logger.error({ err }, "Failed to register slash commands");
-  }
-}
+const PREFIX = "!";
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
 });
 
 client.once(Events.ClientReady, (readyClient) => {
   logger.info({ tag: readyClient.user.tag }, "Discord bot is ready");
-  void registerCommands();
 });
 
-client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+client.on(Events.MessageCreate, async (message: Message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith(PREFIX)) return;
 
-  const command = commands.get(interaction.commandName);
-  if (!command) return;
+  const args = message.content.slice(PREFIX.length).trim().split(/\s+/);
+  const command = args.shift()?.toLowerCase();
 
   try {
-    await command.execute(interaction);
-  } catch (err) {
-    logger.error({ err, command: interaction.commandName }, "Command error");
-    const msg = { content: "Something went wrong running that command.", flags: 64 as const };
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp(msg);
-    } else {
-      await interaction.reply(msg);
+    switch (command) {
+      case "link":
+        await handleLink(message, args);
+        break;
+      case "unlink":
+        await handleUnlink(message, args);
+        break;
+      case "profile":
+        await handleProfile(message, args);
+        break;
+      case "donations":
+        await handleDonations(message, args);
+        break;
+      case "accounts":
+        await handleAccounts(message);
+        break;
+      case "help":
+        await message.reply(
+          "**Clash of Clans Bot Commands**\n" +
+          "`!link <tag>` — Link a CoC account (up to 10)\n" +
+          "`!unlink <tag>` — Unlink a CoC account\n" +
+          "`!accounts` — List your linked accounts\n" +
+          "`!profile [tag]` — View player stats\n" +
+          "`!donations [tag]` — View donation stats"
+        );
+        break;
     }
+  } catch (err) {
+    logger.error({ err, command }, "Command error");
+    await message.reply("Something went wrong running that command.");
   }
 });
 

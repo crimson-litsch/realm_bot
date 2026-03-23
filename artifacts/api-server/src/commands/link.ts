@@ -1,29 +1,18 @@
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-} from "discord.js";
+import { Message, EmbedBuilder } from "discord.js";
 import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, and, count } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 
-export const data = new SlashCommandBuilder()
-  .setName("link")
-  .setDescription("Link a Clash of Clans account to your Discord profile")
-  .addStringOption((opt) =>
-    opt
-      .setName("tag")
-      .setDescription("Your player tag (e.g. #ABC123)")
-      .setRequired(true)
-  );
+export async function handleLink(message: Message, args: string[]) {
+  const rawTag = args[0];
+  if (!rawTag) {
+    await message.reply("Please provide a player tag. Usage: `!link #ABC123`");
+    return;
+  }
 
-export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply({ flags: 64 });
-
-  const rawTag = interaction.options.getString("tag", true).trim();
-  const tag = rawTag.startsWith("#") ? rawTag : `#${rawTag}`;
-  const userId = interaction.user.id;
+  const tag = rawTag.startsWith("#") ? rawTag.toUpperCase() : `#${rawTag.toUpperCase()}`;
+  const userId = message.author.id;
 
   const [{ value: total }] = await db
     .select({ value: count() })
@@ -31,7 +20,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .where(eq(linkedAccountsTable.discordUserId, userId));
 
   if (Number(total) >= 10) {
-    await interaction.editReply("You have reached the maximum of 10 linked accounts. Use `/unlink` to remove one first.");
+    await message.reply("You have reached the maximum of 10 linked accounts. Use `!unlink <tag>` to remove one first.");
     return;
   }
 
@@ -41,12 +30,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     .where(
       and(
         eq(linkedAccountsTable.discordUserId, userId),
-        eq(linkedAccountsTable.playerTag, tag.toUpperCase())
+        eq(linkedAccountsTable.playerTag, tag)
       )
     );
 
   if (existing.length > 0) {
-    await interaction.editReply(`\`${tag}\` is already linked to your account.`);
+    await message.reply(`\`${tag}\` is already linked to your account.`);
     return;
   }
 
@@ -54,7 +43,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
   try {
     player = await getPlayer(tag);
   } catch {
-    await interaction.editReply(`Could not find a player with tag \`${tag}\`. Make sure the tag is correct.`);
+    await message.reply(`Could not find a player with tag \`${tag}\`. Make sure the tag is correct.`);
     return;
   }
 
@@ -75,5 +64,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     )
     .setFooter({ text: `Linked accounts: ${Number(total) + 1}/10` });
 
-  await interaction.editReply({ embeds: [embed] });
+  await message.reply({ embeds: [embed] });
 }

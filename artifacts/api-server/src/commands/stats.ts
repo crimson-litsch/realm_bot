@@ -1,28 +1,12 @@
-import {
-  ChatInputCommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-} from "discord.js";
+import { Message, EmbedBuilder } from "discord.js";
 import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 
-export const data = new SlashCommandBuilder()
-  .setName("stats")
-  .setDescription("View stats for a linked Clash of Clans account")
-  .addStringOption((opt) =>
-    opt
-      .setName("tag")
-      .setDescription("Player tag to look up (defaults to your first linked account)")
-      .setRequired(false)
-  );
-
-export async function execute(interaction: ChatInputCommandInteraction) {
-  await interaction.deferReply();
-
-  const userId = interaction.user.id;
-  let tag = interaction.options.getString("tag");
+export async function handleProfile(message: Message, args: string[]) {
+  const userId = message.author.id;
+  let tag = args[0];
 
   if (!tag) {
     const accounts = await db
@@ -33,26 +17,25 @@ export async function execute(interaction: ChatInputCommandInteraction) {
       .limit(1);
 
     if (accounts.length === 0) {
-      await interaction.editReply("You have no linked accounts. Use `/link <tag>` to add one.");
+      await message.reply("You have no linked accounts. Use `!link <tag>` to add one.");
       return;
     }
-
     tag = accounts[0].playerTag;
   } else {
-    tag = tag.trim().startsWith("#") ? tag.trim() : `#${tag.trim()}`;
+    tag = tag.startsWith("#") ? tag.toUpperCase() : `#${tag.toUpperCase()}`;
   }
 
   let player;
   try {
     player = await getPlayer(tag);
   } catch {
-    await interaction.editReply(`Could not fetch stats for \`${tag}\`. Check the tag and try again.`);
+    await message.reply(`Could not fetch stats for \`${tag}\`. Check the tag and try again.`);
     return;
   }
 
   const embed = new EmbedBuilder()
     .setColor(0xf39c12)
-    .setTitle(`${player.name} — Player Stats`)
+    .setTitle(`${player.name} — Player Profile`)
     .setDescription(`Tag: \`${player.tag}\``)
     .addFields(
       { name: "🏰 Town Hall", value: `Level ${player.townHallLevel}`, inline: true },
@@ -73,5 +56,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     );
   }
 
-  await interaction.editReply({ embeds: [embed] });
+  await message.reply({ embeds: [embed] });
 }
