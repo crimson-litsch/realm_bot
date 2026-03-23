@@ -3,20 +3,7 @@ import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
-
-const TH_EMOJIS: Record<number, string> = {
-  1:  "🪨", 2:  "🪨", 3:  "🪨",
-  4:  "🏠", 5:  "🏠",
-  6:  "🏡", 7:  "🏡", 8:  "🏡",
-  9:  "🏰", 10: "🏰",
-  11: "🏯", 12: "🏯",
-  13: "⚔️", 14: "⚔️",
-  15: "💀", 16: "🐉",
-};
-
-function thEmoji(level: number): string {
-  return TH_EMOJIS[level] ?? "🏠";
-}
+import { thImageUrl } from "../coc-assets";
 
 export async function handleAccounts(message: Message) {
   const userId = message.author.id;
@@ -45,16 +32,22 @@ export async function handleAccounts(message: Message) {
   const lines = accounts.map((a, i) => {
     const player = players[i];
     if (player) {
-      return `**${i + 1}.** ${player.name} — \`${player.tag}\` — ${thEmoji(player.townHallLevel)} TH${player.townHallLevel}`;
+      return `**${i + 1}.** ${player.name} — \`${player.tag}\` — TH${player.townHallLevel}`;
     }
     return `**${i + 1}.** \`${a.playerTag}\` — *Could not fetch*`;
   });
+
+  const mainPlayer = players.find((p) => p !== null);
 
   const embed = new EmbedBuilder()
     .setColor(0x3498db)
     .setTitle("Your Linked Accounts")
     .setDescription(lines.join("\n"))
     .setFooter({ text: `${accounts.length}/10 slots used` });
+
+  if (mainPlayer) {
+    embed.setThumbnail(thImageUrl(mainPlayer.townHallLevel));
+  }
 
   await message.reply({ embeds: [embed] });
 }

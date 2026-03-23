@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
+import { thImageUrl } from "../coc-assets";
 
 export async function handleDonations(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -44,6 +45,7 @@ export async function handleDonations(message: Message, args: string[]) {
     .setColor(0x9b59b6)
     .setTitle(`${player.name} — Donations`)
     .setDescription(`Tag: \`${player.tag}\``)
+    .setThumbnail(thImageUrl(player.townHallLevel))
     .addFields(
       { name: "🎁 Donated", value: `${player.donations.toLocaleString()}`, inline: true },
       { name: "📥 Received", value: `${player.donationsReceived.toLocaleString()}`, inline: true },

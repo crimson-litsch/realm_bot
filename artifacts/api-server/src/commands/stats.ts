@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
+import { thImageUrl } from "../coc-assets";
 
 export async function handleProfile(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -37,6 +38,7 @@ export async function handleProfile(message: Message, args: string[]) {
     .setColor(0xf39c12)
     .setTitle(`${player.name} — Player Profile`)
     .setDescription(`Tag: \`${player.tag}\``)
+    .setThumbnail(thImageUrl(player.townHallLevel))
     .addFields(
       { name: "🏰 Town Hall", value: `Level ${player.townHallLevel}`, inline: true },
       { name: "⭐ XP Level", value: `${player.expLevel}`, inline: true },
