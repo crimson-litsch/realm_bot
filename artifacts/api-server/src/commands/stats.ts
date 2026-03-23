@@ -4,6 +4,7 @@ import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
+import { thEmoji } from "../emoji-manager";
 
 export async function handleProfile(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -40,7 +41,7 @@ export async function handleProfile(message: Message, args: string[]) {
     .setDescription(`Tag: \`${player.tag}\``)
     .setThumbnail(thImageUrl(player.townHallLevel))
     .addFields(
-      { name: "🏰 Town Hall", value: `Level ${player.townHallLevel}`, inline: true },
+      { name: "🏰 Town Hall", value: `${thEmoji(player.townHallLevel)} Level ${player.townHallLevel}`, inline: true },
       { name: "⭐ XP Level", value: `${player.expLevel}`, inline: true },
       { name: "🏆 Trophies", value: `${player.trophies}`, inline: true },
       { name: "🥇 Best Trophies", value: `${player.bestTrophies}`, inline: true },

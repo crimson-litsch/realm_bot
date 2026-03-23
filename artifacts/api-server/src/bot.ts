@@ -5,6 +5,7 @@ import {
   Message,
 } from "discord.js";
 import { logger } from "./lib/logger";
+import { initEmojiManager } from "./emoji-manager";
 import { handleLink } from "./commands/link";
 import { handleUnlink } from "./commands/unlink";
 import { handleProfile } from "./commands/stats";
@@ -29,6 +30,7 @@ const client = new Client({
 
 client.once(Events.ClientReady, (readyClient) => {
   logger.info({ tag: readyClient.user.tag }, "Discord bot is ready");
+  void initEmojiManager(token!);
 });
 
 client.on(Events.MessageCreate, async (message: Message) => {

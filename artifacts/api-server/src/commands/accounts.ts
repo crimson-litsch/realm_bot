@@ -4,6 +4,7 @@ import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getPlayer, CocPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
+import { thEmoji } from "../emoji-manager";
 
 const SUPERSCRIPTS: Record<number, string> = {
   1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵",
@@ -97,7 +98,7 @@ export async function handleAccounts(message: Message) {
     }
 
     const defaultMark = i === 0 ? " ✅ *Default*" : "";
-    const line1 = `**${formatTH(player)} • ${player.name}** (\`${player.tag}\`)${defaultMark}`;
+    const line1 = `${thEmoji(player.townHallLevel)} **${formatTH(player)} • ${player.name}** (\`${player.tag}\`)${defaultMark}`;
     const line2 = formatHeroes(player);
     const line3 = formatClan(player);
 
