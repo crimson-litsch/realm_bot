@@ -26,10 +26,16 @@ async function cocFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export interface CocHero {
+  name: string;
+  level: number;
+}
+
 export interface CocPlayer {
   tag: string;
   name: string;
   townHallLevel: number;
+  townHallWeaponLevel?: number;
   expLevel: number;
   trophies: number;
   bestTrophies: number;
@@ -38,6 +44,8 @@ export interface CocPlayer {
   defenseWins: number;
   donations: number;
   donationsReceived: number;
+  warPreference?: "in" | "out";
+  role?: string;
   clan?: {
     name: string;
     tag: string;
@@ -45,7 +53,7 @@ export interface CocPlayer {
   league?: {
     name: string;
   };
-  role?: string;
+  heroes?: CocHero[];
   builderHallLevel?: number;
   builderBaseTrophies?: number;
 }
