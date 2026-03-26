@@ -5,6 +5,7 @@ import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
 import { thEmoji } from "../emoji-manager";
+import { logger } from "../lib/logger";
 
 export async function handleProfile(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -30,7 +31,8 @@ export async function handleProfile(message: Message, args: string[]) {
   let player;
   try {
     player = await getPlayer(tag);
-  } catch {
+  } catch (err) {
+    logger.error({ err, tag }, "CoC API error in !profile");
     await message.reply(`Could not fetch stats for \`${tag}\`. Check the tag and try again.`);
     return;
   }
