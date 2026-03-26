@@ -1,37 +1,56 @@
-import { Message, EmbedBuilder } from "discord.js";
+import { Message, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, and } from "drizzle-orm";
 
+function isAdmin(message: Message): boolean {
+  return (
+    message.member?.permissions.has(PermissionFlagsBits.Administrator) === true ||
+    message.member?.permissions.has(PermissionFlagsBits.ManageGuild) === true
+  );
+}
+
 export async function handleUnlink(message: Message, args: string[]) {
-  const rawTag = args[0];
+  if (!isAdmin(message)) {
+    await message.reply("Only server admins can use `!unlink`.");
+    return;
+  }
+
+  const mentionMatch = args[0]?.match(/^<@!?(\d+)>$/);
+  if (!mentionMatch) {
+    await message.reply("Usage: `!unlink @user #playertag`");
+    return;
+  }
+
+  const targetUserId = mentionMatch[1];
+  const rawTag = args[1];
+
   if (!rawTag) {
-    await message.reply("Please provide a player tag. Usage: `!unlink #ABC123`");
+    await message.reply("Usage: `!unlink @user #playertag`");
     return;
   }
 
   const tag = rawTag.startsWith("#") ? rawTag.toUpperCase() : `#${rawTag.toUpperCase()}`;
-  const userId = message.author.id;
 
   const deleted = await db
     .delete(linkedAccountsTable)
     .where(
       and(
-        eq(linkedAccountsTable.discordUserId, userId),
+        eq(linkedAccountsTable.discordUserId, targetUserId),
         eq(linkedAccountsTable.playerTag, tag)
       )
     )
     .returning();
 
   if (deleted.length === 0) {
-    await message.reply(`No linked account found with tag \`${tag}\`.`);
+    await message.reply(`No linked account found for <@${targetUserId}> with tag \`${tag}\`.`);
     return;
   }
 
   const embed = new EmbedBuilder()
     .setColor(0xe74c3c)
     .setTitle("Account Unlinked")
-    .setDescription(`Successfully unlinked \`${tag}\` from your Discord profile.`);
+    .setDescription(`Successfully unlinked \`${tag}\` from <@${targetUserId}>'s profile.`);
 
   await message.reply({ embeds: [embed] });
 }

@@ -1,26 +1,54 @@
-import { Message, EmbedBuilder } from "discord.js";
+import { Message, EmbedBuilder, PermissionFlagsBits } from "discord.js";
 import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, and, count } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 
+function isAdmin(message: Message): boolean {
+  return (
+    message.member?.permissions.has(PermissionFlagsBits.Administrator) === true ||
+    message.member?.permissions.has(PermissionFlagsBits.ManageGuild) === true
+  );
+}
+
 export async function handleLink(message: Message, args: string[]) {
-  const rawTag = args[0];
-  if (!rawTag) {
-    await message.reply("Please provide a player tag. Usage: `!link #ABC123`");
+  const mentionMatch = args[0]?.match(/^<@!?(\d+)>$/);
+  const isAdminLinking = mentionMatch !== null && mentionMatch !== undefined;
+
+  if (isAdminLinking && !isAdmin(message)) {
+    await message.reply("You need **Manage Server** permission to link accounts for other users.");
     return;
   }
 
+  let targetUserId: string;
+  let rawTag: string | undefined;
+
+  if (isAdminLinking) {
+    targetUserId = mentionMatch![1];
+    rawTag = args[1];
+    if (!rawTag) {
+      await message.reply("Usage: `!link @user #playertag`");
+      return;
+    }
+  } else {
+    targetUserId = message.author.id;
+    rawTag = args[0];
+    if (!rawTag) {
+      await message.reply("Please provide a player tag. Usage: `!link #playertag`");
+      return;
+    }
+  }
+
   const tag = rawTag.startsWith("#") ? rawTag.toUpperCase() : `#${rawTag.toUpperCase()}`;
-  const userId = message.author.id;
 
   const [{ value: total }] = await db
     .select({ value: count() })
     .from(linkedAccountsTable)
-    .where(eq(linkedAccountsTable.discordUserId, userId));
+    .where(eq(linkedAccountsTable.discordUserId, targetUserId));
 
   if (Number(total) >= 10) {
-    await message.reply("You have reached the maximum of 10 linked accounts. Use `!unlink <tag>` to remove one first.");
+    const who = isAdminLinking ? "That user has" : "You have";
+    await message.reply(`${who} reached the maximum of 10 linked accounts.`);
     return;
   }
 
@@ -29,13 +57,13 @@ export async function handleLink(message: Message, args: string[]) {
     .from(linkedAccountsTable)
     .where(
       and(
-        eq(linkedAccountsTable.discordUserId, userId),
+        eq(linkedAccountsTable.discordUserId, targetUserId),
         eq(linkedAccountsTable.playerTag, tag)
       )
     );
 
   if (existing.length > 0) {
-    await message.reply(`\`${tag}\` is already linked to your account.`);
+    await message.reply(`\`${tag}\` is already linked to that account.`);
     return;
   }
 
@@ -48,15 +76,16 @@ export async function handleLink(message: Message, args: string[]) {
   }
 
   await db.insert(linkedAccountsTable).values({
-    discordUserId: userId,
+    discordUserId: targetUserId,
     playerTag: player.tag,
     position: Number(total) + 1,
   });
 
+  const targetMention = isAdminLinking ? `<@${targetUserId}>` : "your";
   const embed = new EmbedBuilder()
     .setColor(0x2ecc71)
     .setTitle("Account Linked!")
-    .setDescription(`Successfully linked **${player.name}** (\`${player.tag}\`) to your Discord profile.`)
+    .setDescription(`Successfully linked **${player.name}** (\`${player.tag}\`) to ${targetMention} Discord profile.`)
     .addFields(
       { name: "Town Hall", value: `Level ${player.townHallLevel}`, inline: true },
       { name: "Trophies", value: `${player.trophies}`, inline: true },

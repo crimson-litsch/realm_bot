@@ -59,12 +59,15 @@ client.on(Events.MessageCreate, async (message: Message) => {
         break;
       case "help":
         await message.reply(
-          "**Clash of Clans Bot Commands**\n" +
-          "`!link <tag>` — Link a CoC account (up to 10)\n" +
-          "`!unlink <tag>` — Unlink a CoC account\n" +
+          "**Clash of Clans Bot Commands**\n\n" +
+          "**General**\n" +
+          "`!link #playertag` — Link a CoC account to yourself (up to 10)\n" +
           "`!accounts` — List your linked accounts\n" +
           "`!profile [tag]` — View player stats\n" +
-          "`!donations [tag]` — View donation stats"
+          "`!donations [tag]` — View donation stats\n\n" +
+          "**Admin Only**\n" +
+          "`!link @user #playertag` — Link a CoC account to another user\n" +
+          "`!unlink @user #playertag` — Unlink a CoC account from a user"
         );
         break;
     }
