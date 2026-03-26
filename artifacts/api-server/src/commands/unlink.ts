@@ -12,7 +12,7 @@ function isAdmin(message: Message): boolean {
 
 export async function handleUnlink(message: Message, args: string[]) {
   if (!isAdmin(message)) {
-    await message.reply("Only server admins can use `!unlink`.");
+    await message.reply("Only server leaders can use `!unlink`.");
     return;
   }
 
