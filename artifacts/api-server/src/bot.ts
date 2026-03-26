@@ -11,6 +11,7 @@ import { handleUnlink } from "./commands/unlink";
 import { handleProfile } from "./commands/stats";
 import { handleDonations } from "./commands/donations";
 import { handleAccounts } from "./commands/accounts";
+import { handleBases } from "./commands/bases";
 
 const token = process.env["DISCORD_BOT_TOKEN"];
 
@@ -57,6 +58,9 @@ client.on(Events.MessageCreate, async (message: Message) => {
       case "accounts":
         await handleAccounts(message);
         break;
+      case "bases":
+        await handleBases(message);
+        break;
       case "help":
         await message.reply(
           "**Clash of Clans Bot Commands**\n\n" +
@@ -64,7 +68,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
           "`!link #playertag` — Link a CoC account to yourself (up to 10)\n" +
           "`!accounts` — List your linked accounts\n" +
           "`!profile [tag]` — View player stats\n" +
-          "`!donations [tag]` — View donation stats\n\n" +
+          "`!donations [tag]` — View donation stats\n" +
+          "`!bases` — View approved FWA bases (expires in 30s)\n\n" +
           "**Admin Only**\n" +
           "`!link @user #playertag` — Link a CoC account to another user\n" +
           "`!unlink @user #playertag` — Unlink a CoC account from a user"
