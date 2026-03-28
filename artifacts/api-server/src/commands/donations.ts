@@ -5,6 +5,7 @@ import { eq, asc } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
 import { logger } from "../lib/logger";
+import { randomColor } from "../lib/colors";
 
 export async function handleDonations(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -44,7 +45,7 @@ export async function handleDonations(message: Message, args: string[]) {
       : "0.00";
 
   const embed = new EmbedBuilder()
-    .setColor(0x9b59b6)
+    .setColor(randomColor())
     .setTitle(`${player.name} — Donations`)
     .setDescription(`Tag: \`${player.tag}\``)
     .setThumbnail(thImageUrl(player.townHallLevel))

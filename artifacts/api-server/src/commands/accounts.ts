@@ -5,6 +5,7 @@ import { eq, asc } from "drizzle-orm";
 import { getPlayer, CocPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
 import { thEmoji } from "../emoji-manager";
+import { randomColor } from "../lib/colors";
 
 const SUPERSCRIPTS: Record<number, string> = {
   1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵",
@@ -76,7 +77,7 @@ export async function handleAccounts(message: Message) {
   );
 
   const embed = new EmbedBuilder()
-    .setColor(0x3498db)
+    .setColor(randomColor())
     .setAuthor({
       name: `${message.author.displayName}`,
       iconURL: message.author.displayAvatarURL(),

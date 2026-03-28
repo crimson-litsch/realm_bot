@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import { linkedAccountsTable } from "@workspace/db/schema";
 import { eq, and, count } from "drizzle-orm";
 import { getPlayer } from "../coc-api";
+import { randomColor } from "../lib/colors";
 
 function isAdmin(message: Message): boolean {
   return (
@@ -83,7 +84,7 @@ export async function handleLink(message: Message, args: string[]) {
 
   const targetMention = isAdminLinking ? `<@${targetUserId}>` : "your";
   const embed = new EmbedBuilder()
-    .setColor(0x2ecc71)
+    .setColor(randomColor())
     .setTitle("Account Linked!")
     .setDescription(`Successfully linked **${player.name}** (\`${player.tag}\`) to ${targetMention} Discord profile.`)
     .addFields(

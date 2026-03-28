@@ -1,5 +1,6 @@
 import { Message, EmbedBuilder } from "discord.js";
 import { thEmoji } from "../emoji-manager";
+import { randomColor } from "../lib/colors";
 
 const FWA_BASES = [
   {
@@ -34,7 +35,7 @@ function buildEmbed(): EmbedBuilder {
   ).join("\n\n");
 
   return new EmbedBuilder()
-    .setColor(0xe67e22)
+    .setColor(randomColor())
     .setTitle("FWA Approved Bases")
     .setDescription(
       "Here are the links of approved FWA bases. If you just upgraded Town Hall, make sure to build new walls and defenses for the base to work properly.\n\n" +

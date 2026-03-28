@@ -12,6 +12,11 @@ import { handleProfile } from "./commands/stats";
 import { handleDonations } from "./commands/donations";
 import { handleAccounts } from "./commands/accounts";
 import { handleBases } from "./commands/bases";
+import { makeClanHandler } from "./commands/clan";
+
+const handleDa = makeClanHandler("#2GQQV0RVP");
+const handleBr = makeClanHandler("#2GQ2G2LU0");
+const handleBm = makeClanHandler("#2RG9YP899");
 
 const token = process.env["DISCORD_BOT_TOKEN"];
 
@@ -60,6 +65,15 @@ client.on(Events.MessageCreate, async (message: Message) => {
         break;
       case "bases":
         await handleBases(message);
+        break;
+      case "da":
+        await handleDa(message);
+        break;
+      case "br":
+        await handleBr(message);
+        break;
+      case "bm":
+        await handleBm(message);
         break;
       case "help":
         await message.reply(

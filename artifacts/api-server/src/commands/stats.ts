@@ -6,6 +6,7 @@ import { getPlayer } from "../coc-api";
 import { thImageUrl } from "../coc-assets";
 import { thEmoji } from "../emoji-manager";
 import { logger } from "../lib/logger";
+import { randomColor } from "../lib/colors";
 
 export async function handleProfile(message: Message, args: string[]) {
   const userId = message.author.id;
@@ -38,7 +39,7 @@ export async function handleProfile(message: Message, args: string[]) {
   }
 
   const embed = new EmbedBuilder()
-    .setColor(0xf39c12)
+    .setColor(randomColor())
     .setTitle(`${player.name} — Player Profile`)
     .setDescription(`Tag: \`${player.tag}\``)
     .setThumbnail(thImageUrl(player.townHallLevel))

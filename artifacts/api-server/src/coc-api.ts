@@ -58,6 +58,42 @@ export interface CocPlayer {
   builderBaseTrophies?: number;
 }
 
+export interface CocClanMember {
+  name: string;
+  tag: string;
+  role: string;
+}
+
+export interface CocClan {
+  tag: string;
+  name: string;
+  description?: string;
+  type?: string;
+  badgeUrls: {
+    small: string;
+    medium: string;
+    large: string;
+  };
+  clanLevel: number;
+  clanPoints: number;
+  members: number;
+  memberList?: CocClanMember[];
+}
+
 export async function getPlayer(tag: string): Promise<CocPlayer> {
   return cocFetch<CocPlayer>(`/players/${encodeTag(tag)}`);
+}
+
+export async function getClan(tag: string): Promise<CocClan> {
+  return cocFetch<CocClan>(`/clans/${encodeTag(tag)}`);
+}
+
+export function clanInGameLink(tag: string): string {
+  const bare = tag.startsWith("#") ? tag.slice(1) : tag;
+  return `https://link.clashofclans.com/en?action=OpenClanProfile&tag=%23${bare}`;
+}
+
+export function clanStatsLink(tag: string): string {
+  const bare = tag.startsWith("#") ? tag.slice(1) : tag;
+  return `https://www.clashofstats.com/clans/${bare}/summary`;
 }
