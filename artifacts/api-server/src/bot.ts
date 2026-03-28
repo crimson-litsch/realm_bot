@@ -5,6 +5,7 @@ import {
   Message,
 } from "discord.js";
 import { logger } from "./lib/logger";
+import { initCocToken } from "./coc-token-manager";
 import { initEmojiManager } from "./emoji-manager";
 import { handleLink } from "./commands/link";
 import { handleUnlink } from "./commands/unlink";
@@ -36,14 +37,8 @@ const client = new Client({
 
 client.once(Events.ClientReady, async (readyClient) => {
   logger.info({ tag: readyClient.user.tag }, "Discord bot is ready");
+  await initCocToken();
   void initEmojiManager(token!);
-  try {
-    const ipRes = await fetch("https://api.ipify.org?format=json");
-    const { ip } = await ipRes.json() as { ip: string };
-    logger.info({ ip }, "Outbound IP — use this for CoC API key whitelist");
-  } catch {
-    logger.warn("Could not determine outbound IP");
-  }
 });
 
 client.on(Events.MessageCreate, async (message: Message) => {

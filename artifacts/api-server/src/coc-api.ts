@@ -1,9 +1,9 @@
+import { getCocToken } from "./coc-token-manager";
+
 const COC_API_BASE = "https://api.clashofclans.com/v1";
 
 function getToken() {
-  const token = process.env["COC_API_TOKEN"];
-  if (!token) throw new Error("COC_API_TOKEN is not set");
-  return token;
+  return getCocToken();
 }
 
 function encodeTag(tag: string): string {
