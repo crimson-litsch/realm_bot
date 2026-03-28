@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "NODE_ENV=development pnpm install && pnpm --filter @workspace/api-server run build"
+buildCommand = "NODE_ENV=development pnpm install --no-frozen-lockfile && pnpm --filter @workspace/api-server run build"
 
 [deploy]
 startCommand = "pnpm --filter @workspace/db run push && node --enable-source-maps artifacts/api-server/dist/index.mjs"
