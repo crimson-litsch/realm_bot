@@ -97,13 +97,11 @@ export async function initCocToken(): Promise<void> {
     const { token: portalToken, cookie } = await portalLogin();
     const keys = await listKeys(cookie, portalToken);
 
-    const existing = keys.find(
-      (k) => k.name === KEY_NAME && k.cidrRanges.includes(ip)
-    );
+    const existing = keys.find((k) => k.cidrRanges.includes(ip));
 
     if (existing) {
       cachedToken = existing.key;
-      logger.info("CoC API key already valid for current IP — reusing");
+      logger.info({ name: existing.name }, "CoC API key already valid for current IP — reusing");
       return;
     }
 
